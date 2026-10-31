@@ -13,4 +13,7 @@ finanzasRoute.delete('/perfiles/:id', PerfilController.eliminarPerfil);
 
 //usuarios
 finanzasRoute.post('/usuarios', UsuarioController.adicionarUsuario);
-finanzasRoute.get('/usuarios', UsuarioController.ObtenerUsuarios);
+finanzasRoute.get('/usuarios', UsuarioController.obtenerUsuarios);
+finanzasRoute.get('/usuarios/:id', UsuarioController.obtenerUsuarioPorId);
+finanzasRoute.patch('/usuarios/:id', UsuarioController.actualizarUsuario);
+finanzasRoute.delete('/usuarios/:id', UsuarioController.eliminarUsuario);

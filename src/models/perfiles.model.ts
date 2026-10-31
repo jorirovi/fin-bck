@@ -18,7 +18,7 @@ export class PerfilesModel {
     }
 
     static async getPerfilById(id: string): Promise<PerfilRow | null> {
-        const sqlQuery = "SELECT * FROM perdiales AS p WHERE p.id = ?";
+        const sqlQuery = "SELECT * FROM perfiles AS p WHERE p.id = ?";
         const [perfil] = await this.db.execute<PerfilRow[]>(sqlQuery, [id]);
         return perfil[0] ?? null;
     }

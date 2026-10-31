@@ -19,7 +19,7 @@ export class UsuarioModel {
     }
 
     static async getAllUsuarios(): Promise<UsuarioRow[]> {
-        const sqlQuery = 'SELECT * FROM usuario_rol';
+        const sqlQuery = 'SELECT * FROM usuarios_rol';
         const usuarios = await this.db.execute<UsuarioRow[]>(sqlQuery);
         return usuarios[0]
     }
@@ -31,7 +31,7 @@ export class UsuarioModel {
     }
 
     static async getUsuarioById(id: string): Promise<UsuarioRow | null> {
-        const sqlQuery = 'SELECT * FROM usuario_rol AS u WHERE u.id = ?';
+        const sqlQuery = 'SELECT * FROM usuarios_rol AS u WHERE u.id = ?';
         const [usuario] = await this.db.execute<UsuarioRow[]>(sqlQuery, [id]);
         return usuario[0] ?? null;
     }
