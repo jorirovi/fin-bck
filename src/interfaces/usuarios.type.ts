@@ -46,3 +46,19 @@ export interface UsuarioActualizar extends UsuarioActulizarInput {
     fecha_modifica: Date
 }
 
+export interface PasswordCambiar {
+    email: string,
+    nuevoPassword: string;
+}
+
+export type PasswordInput =
+    Pick <
+        PasswordCambiar, "nuevoPassword"
+    >
+
+export type UsuarioEmail =
+    Pick <
+        PasswordCambiar, "email"
+    >
+
+

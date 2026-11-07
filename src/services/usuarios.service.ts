@@ -1,5 +1,5 @@
 import type { Validaciones } from "../interfaces/errores.type.js";
-import type { UsuarioActualizar, UsuarioActulizarInput, UsuarioInput, UsuarioRow } from "../interfaces/usuarios.type.js";
+import type { PasswordCambiar, UsuarioActualizar, UsuarioActulizarInput, UsuarioInput, UsuarioRow } from "../interfaces/usuarios.type.js";
 import bcrypt from 'bcrypt'
 import { ValidaCampos } from "../utils/validaciones.utils.js";
 import { UsuarioModel } from "../models/usuarios.model.js";
@@ -82,4 +82,23 @@ export class UsuarioService {
         const elminarUSuario = await UsuarioModel.RemoveUsuario(id);
         return elminarUSuario;
     }
+
+    static async updatePassword(input: PasswordCambiar): Promise<boolean>{
+        const emailVal: Validaciones = ValidaCampos.emailVal(input.email);
+        const passVal: Validaciones = ValidaCampos.passVal(input.nuevoPassword);
+        if (!emailVal.estado) {
+            throw new Error(emailVal.error);
+        }
+        if (!passVal.estado){
+            throw new Error(passVal.error);
+        }
+        const usuarioExiste = await UsuarioModel.getUsuarioByEmail(input.email);
+        if (usuarioExiste === null ){
+            throw new Error('Usuario no existe en la BD.');
+        }
+        const email = usuarioExiste.email;
+        const passHash = await bcrypt.hash(input.nuevoPassword, 10);
+        const passUpdate = await UsuarioModel.updatePassword(email, passHash);
+        return passUpdate;
+    } 
 }

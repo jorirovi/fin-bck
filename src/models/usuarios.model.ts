@@ -25,8 +25,10 @@ export class UsuarioModel {
     }
 
     static async getUsuarioByEmail(email: string): Promise<UsuarioAuth | null> {
-        const sqlQuey = 'SELECT u.id, u.email, u.password FROM usuarios AS u WHERE u.email = ?';
+        console.log('MODEL EMAIL: ', email);
+        const sqlQuey = 'SELECT u.id, u.email, u.password, u.perfil FROM usuarios AS u WHERE u.email = ?';
         const [usuarioAuth] = await this.db.execute<UsuarioAuth[]>(sqlQuey, [email]);
+        console.log('USUARIO ENCONTRADO: ', usuarioAuth[0])
         return usuarioAuth[0] ?? null;
     }
 
@@ -58,5 +60,15 @@ export class UsuarioModel {
         const sqlQuery = 'DELETE FROM usuarios AS u WHERE u.id = ?'
         const eliminaUsuario = await this.db.execute<ResultSetHeader>(sqlQuery, [id]);
         return eliminaUsuario[0].affectedRows === 1;
+    }
+
+    static async updatePassword(email: string, nuevoPass: string):Promise<boolean>{
+        const sqlQuery = `
+            UPDATE usuarios as u
+            SET u.password = ?
+            WHERE u.email = ?
+        `;
+        const updatePass = await this.db.execute<ResultSetHeader>(sqlQuery, [nuevoPass, email]);
+        return updatePass[0].affectedRows === 1;
     }
 }

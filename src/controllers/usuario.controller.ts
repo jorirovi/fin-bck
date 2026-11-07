@@ -1,4 +1,4 @@
-import type { UsuarioActulizarInput, usuarioId, UsuarioInput } from "../interfaces/usuarios.type.js";
+import type { PasswordCambiar, PasswordInput, UsuarioActulizarInput, UsuarioEmail, usuarioId, UsuarioInput } from "../interfaces/usuarios.type.js";
 import type { Request, Response } from "express"
 import { UsuarioService } from "../services/usuarios.service.js";
 
@@ -178,6 +178,47 @@ export class UsuarioController {
             return res.status(500).json({
                 message: 'Error en el Servidor'
             });
+        }
+    }
+
+    static async actualizaPassword(
+        req: Request<UsuarioEmail, {}, PasswordInput>,
+        res: Response
+    ): Promise<Response> {
+        try {
+            if(!req.params.email){
+                return res.status(409).json({
+                    message: 'Debe indicar un email'
+                });
+            }
+            if(!req.body.nuevoPassword) {
+                return res.status(409).json({
+                    message: 'Debe indicar un password.'
+                });
+            }
+            const input: PasswordCambiar = {
+                email: req.params.email.trim(),
+                nuevoPassword: req.body.nuevoPassword.trim()
+            };
+            const resultado = await UsuarioService.updatePassword(input);
+            if (!resultado){
+                return res.status(404).json({
+                    message: 'El password no pudo ser cambiado'
+                });
+            }
+            return res.status(200).json({
+                message: 'Password Cambiado con exito.'
+            })
+        } catch (err) {
+            console.log(err);
+            if (err instanceof Error) {
+                return res.status(404).json({
+                    message: err.message
+                });
+            }
+            return res.status(500).json({
+                message: 'Error en el Servidor.'
+            })
         }
     }
 }
