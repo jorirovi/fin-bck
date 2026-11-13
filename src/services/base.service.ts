@@ -1,8 +1,12 @@
 import type { CrudRepository } from "../interfaces/crudrepository.type.js";
 
-export class BaseService<T, TInput extends object> {
+export class BaseService<
+        T, 
+        TInput extends object,
+        TModel extends CrudRepository<T, TInput> = CrudRepository<T, TInput>
+    > {
     constructor(
-        protected readonly model: CrudRepository<T, TInput>
+        protected readonly model: TModel
     ){}
 
     async getAll(): Promise<T[]> {

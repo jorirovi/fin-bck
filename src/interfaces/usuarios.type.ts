@@ -1,7 +1,7 @@
 import type { RowDataPacket } from "mysql2"
 import type { Rol } from "./perfiles.type.js"
 
-export interface Usuario {
+export interface Usuario extends RowDataPacket {
     id: string,
     nombre: string,
     email: string,
@@ -21,7 +21,7 @@ export type UsuarioInput =
         Usuario, "nombre" | "email" | "password" | "perfil"
     >
 
-export interface UsuarioRol extends UsuarioPublico {
+export interface UsuarioRol extends UsuarioPublico, RowDataPacket {
     rol: Rol 
 }
 
@@ -34,7 +34,7 @@ export interface UsuarioRow extends UsuarioRol, RowDataPacket {}
 export interface UsuarioAuth extends RowDataPacket {
     id: string,
     email: string,
-    password: string
+    password: string,
 }
 
 export type UsuarioActulizarInput = 

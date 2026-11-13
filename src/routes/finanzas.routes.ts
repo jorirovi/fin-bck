@@ -1,11 +1,13 @@
 import { Router } from "express";
 import { PerfilesController } from "../controllers/perfiles.controller.js";
-import { UsuarioController } from "../controllers/usuario.controller.js";
 import { RubrosModel } from "../models/rubros.model.js";
 import { RubrosService } from "../services/rubros.service.js";
 import { RubrosController } from "../controllers/rubros.controller.js";
 import { PerfilesModel } from "../models/perfiles.model.js";
 import { PerfilesService } from "../services/perfiles.service.js";
+import { UsuarioModel } from "../models/usuarios.model.js";
+import { UsuariosService } from "../services/usuarios.service.js";
+import { UsuariosController } from "../controllers/usuario.controller.js";
 
 export const finanzasRoute = Router();
 
@@ -19,16 +21,20 @@ const perfilesModel = new PerfilesModel();
 const perfilesService = new PerfilesService(perfilesModel);
 const perfilesController = new PerfilesController(perfilesService);
 
+//intsnacia Usuarios
+const usuarioModel = new UsuarioModel();
+const usuarioService = new UsuariosService(usuarioModel, perfilesModel);
+const usuarioController = new UsuariosController(usuarioService);
+
 //Perfiles
 finanzasRoute.get('/perfiles', perfilesController.obtenerPerfiles);
 
 //usuarios
-finanzasRoute.post('/usuarios', UsuarioController.adicionarUsuario);
-finanzasRoute.get('/usuarios', UsuarioController.obtenerUsuarios);
-finanzasRoute.get('/usuarios/:id', UsuarioController.obtenerUsuarioPorId);
-finanzasRoute.patch('/usuarios/:id', UsuarioController.actualizarUsuario);
-finanzasRoute.delete('/usuarios/:id', UsuarioController.eliminarUsuario);
-finanzasRoute.patch('/usuarios/:email/password', UsuarioController.actualizaPassword);
+finanzasRoute.post('/usuarios', usuarioController.crearUsuario);
+finanzasRoute.patch('/usuarios/:id', usuarioController.actualizarUSuario);
+finanzasRoute.get('/usuarios', usuarioController.obtenerUsuarios);
+finanzasRoute.get('/usuarios/:id', usuarioController.obtenerUsuarioPorId);
+finanzasRoute.delete('/usuarios/:id', usuarioController.eliminarUsuario);
 
 //Rubros (implementacion con instancias)
 finanzasRoute.get('/rubros', rubrosController.obtenerRubros);

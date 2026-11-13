@@ -1,97 +1,163 @@
-import type { PasswordCambiar, PasswordInput, UsuarioActulizarInput, UsuarioEmail, usuarioId, UsuarioInput } from "../interfaces/usuarios.type.js";
-import type { Request, Response } from "express"
-import { UsuarioService } from "../services/usuarios.service.js";
+import type { usuarioId, UsuarioInput, UsuarioPublico } from "../interfaces/usuarios.type.js";
+import type { UsuariosService } from "../services/usuarios.service.js";
+import type { Request, Response } from 'express';
 
-export class UsuarioController {
-    static async adicionarUsuario(
+export class UsuariosController {
+    constructor(
+        private readonly usuariosService: UsuariosService
+    ){}
+
+    crearUsuario = async (
         req: Request<{}, {}, UsuarioInput>,
         res: Response
-    ): Promise<Response> {
+    ): Promise<Response> => {
         try {
-            if(!req.body.nombre) {
-            return res.status(409).json({
-                message: "debe indicar un Nombre"
-            });
-            }
-            if(!req.body.email) {
-                return res.status(409).json({
-                    message: "debe indicar un Email"
+            if (!req.body.nombre) {
+                return res.status(400).json({
+                    message: 'Debe indicar un nombre.'
                 });
             }
-            if(!req.body.password) {
-                return res.status(409).json({
-                    message: "debe indicar un Password"
+            if (!req.body.email) {
+                return res.status(400).json({
+                    message: 'Debe indicar un email.'
                 });
             }
-            if(!req.body.perfil) {
-                return res.status(409).json({
-                    message: "debe indicar un Rol"
+            if(!req.body.password){
+                return res.status(400).json({
+                    message: 'Debe indicar un password.'
                 });
             }
-
+            if (!req.body.perfil) {
+                return res.status(400).json({
+                    message: 'Debe indicar un Rol'
+                })
+            }
             const input: UsuarioInput = {
                 nombre: String(req.body.nombre).trim(),
                 email: String(req.body.email).trim(),
                 password: String(req.body.password).trim(),
                 perfil: String(req.body.perfil).trim()
-            };
-            const resultado = await UsuarioService.addUsuario(input);
+            }   
+            const resultado = await this.usuariosService.create(input);
             if(!resultado){
-                return res.status(404).json({
-                    message: "El usuario no pudo ser adicionado a la BD."
-                })
+                return res.status(400).json({
+                    message: 'El usario no pudo ser creado en BD.'
+                });
             }
-            return res.status(200).json({
-                message: 'Usuario Adicionado con Exito a la BD.'
+            return res.status(201).json({
+                message: 'Usuario Creado con Exito en la BD.'
             })
         } catch (err) {
             console.log(err);
             if (err instanceof Error) {
                 return res.status(404).json({
                     message: err.message
-                })
+                });
             }
             return res.status(500).json({
-                message: "Error en el Servidor."
-            })
+                message: "Error en el Servicor."
+            });
         }
     }
 
-    static async obtenerUsuarios(
+    actualizarUSuario = async (
+        req: Request<usuarioId, {}, UsuarioInput>,
+        res: Response
+    ): Promise<Response> => {
+        try {
+            if(!req.params.id){
+                return res.status(400).json({
+                    message: 'Debe indicar un usuario'
+                });
+            }
+            const id = String(req.params.id).trim();
+            if (!req.body.nombre) {
+                return res.status(400).json({
+                    message: 'Debe indicar un nombre.'
+                });
+            }
+            if (!req.body.email) {
+                return res.status(400).json({
+                    message: 'Debe indicar un email.'
+                });
+            }
+            if(!req.body.password){
+                return res.status(400).json({
+                    message: 'Debe indicar un password.'
+                });
+            }
+            if (!req.body.perfil) {
+                return res.status(400).json({
+                    message: 'Debe indicar un Rol'
+                })
+            }
+            const input: UsuarioInput = {
+                nombre: String(req.body.nombre).trim(),
+                email: String(req.body.email).trim(),
+                password: String(req.body.password).trim(),
+                perfil: String(req.body.perfil).trim()
+            }   
+            const resultado = await this.usuariosService.update(id, input);
+            if(!resultado) {
+                return res.status(400).json({
+                    message: 'El Usuario no se pudo Actualizar.'
+                });
+            }
+            return res.status(200).json({
+                message: 'Usuario actualizado con exito'
+            })
+        } catch (err) {
+            console.log(err);
+            if(err instanceof Error) {
+                return res.status(400).json({
+                    message: err.message
+                });
+            }
+            return res.status(500).json({
+                message: 'Error en el Servidor'
+            });
+        }
+    }
+
+    obtenerUsuarios = async (
         req: Request,
         res: Response
-    ): Promise<Response> {
+    ): Promise<Response> => {
         try {
-            const usuarios = await UsuarioService.getUsuarios();
+            const usuarios = await this.usuariosService.getAllUsuarioPublico();
             return res.status(200).json(usuarios);
-        } catch(err) {
-            console.log(err)
+        } catch (err) {
+            console.log(err);
+            if (err instanceof Error) {
+                return res.status(400).json({
+                    message: err.message
+                });
+            }
             return res.status(500).json({
-                message: 'Error en el Sevidor.'
+                message: "Error del servidor."
             })
         }
-        
     }
 
-    static async obtenerUsuarioPorId(
+    obtenerUsuarioPorId = async (
         req: Request<usuarioId>,
         res: Response
-    ): Promise<Response> {
+    ): Promise<Response> => {
         try {
-            const id = req.params.id;
-            const usuario = await UsuarioService.getUsuarioById(id);
-            if (usuario === null) {
-                return res.status(404).json({
-                    message: 'Usuario no encontrado'
-                })
+            if (!req.params.id) {
+                return res.status(400).json({
+                    mesaage: 'Debe indicar el id del usuario'
+                });
             }
+            const id = String(req.params.id).trim();
+            const usuario = await this.usuariosService.getUsuarioPublicoById(id);
             return res.status(200).json(usuario);
         } catch (err) {
             console.log(err);
             if (err instanceof Error) {
-                return res.status(404).json({
+                return res.status(400).json({
                     message: err.message
-                })
+                });
             }
             return res.status(500).json({
                 message: 'Error en el Servidor.'
@@ -99,120 +165,30 @@ export class UsuarioController {
         }
     }
 
-    static async actualizarUsuario(
-        req: Request<usuarioId, {}, UsuarioActulizarInput>,
+    eliminarUsuario = async (
+        req: Request<usuarioId>,
         res: Response
-    ): Promise<Response> {
+    ): Promise<Response> => {
         try {
-            if(!req.body.nombre) {
-                return res.status(409).json({
-                    message: 'Debe indicar un nombre'
-                });
-            }
-            if(!req.body.email) {
-                return res.status(409).json({
-                    message: 'Debe indicar un email'
-                });
-            }
-            if(!req.body.perfil) {
-                return res.status(409).json({
-                    message: 'Debe indicar un rol'
-                });
-            }
             if(!req.params.id) {
-                return res.status(409).json({
-                    message: "Debe indicar un Usuario"
+                return res.status(400).json({
+                    message: 'Debe indicar el ID de un usuario'
                 });
             }
             const id = String(req.params.id).trim();
-            const input: UsuarioActulizarInput = {
-                nombre: String(req.body.email).trim(),
-                email: String(req.body.email).trim(),
-                perfil: String(req.body.perfil).trim()
-            }
-            const resultado = await UsuarioService.updateUsuario(id, input);
+            const resultado = await this.usuariosService.delete(id);
             if (!resultado) {
-                return res.status(404).json({
-                    message: 'No se actualizo el registro en la BD.'
+                return res.status(400).json({
+                    message: 'El usuario no pudo ser eliinado de la BD'
                 });
             }
             return res.status(200).json({
-                message: 'Usuario Actualizado correctamente.'
-            })
-        } catch (err) {
-            console.log(err);
-            if (err instanceof Error){
-                return res.status(404).json({
-                    message: err.message
-                })
-            }
-            return res.status(500).json({
-                message: 'Error en el Servidor'
+                message: 'Usuario Eliminado de la BD.'
             });
-        }
-        
-    }
-
-    static async eliminarUsuario(
-        req: Request<usuarioId>,
-        res: Response
-    ): Promise<Response> {
-        try {
-            if(!req.params.id){
-                return res.status(404).json({
-                    message: 'Debe indicar un usuario'
-                })
-            }
-            const id = req.params.id;
-            const resultado = await UsuarioService.removeUser(id);
-            if(!resultado) {
-                return res.status(404).json({
-                    message: 'Usuario no eliminado de la BD.'
-                })
-            }
-            return res.status(200).json({
-                message: 'Usuario elimnado con exito.'
-            })
         } catch (err) {
             console.log(err);
-            return res.status(500).json({
-                message: 'Error en el Servidor'
-            });
-        }
-    }
-
-    static async actualizaPassword(
-        req: Request<UsuarioEmail, {}, PasswordInput>,
-        res: Response
-    ): Promise<Response> {
-        try {
-            if(!req.params.email){
-                return res.status(409).json({
-                    message: 'Debe indicar un email'
-                });
-            }
-            if(!req.body.nuevoPassword) {
-                return res.status(409).json({
-                    message: 'Debe indicar un password.'
-                });
-            }
-            const input: PasswordCambiar = {
-                email: req.params.email.trim(),
-                nuevoPassword: req.body.nuevoPassword.trim()
-            };
-            const resultado = await UsuarioService.updatePassword(input);
-            if (!resultado){
-                return res.status(404).json({
-                    message: 'El password no pudo ser cambiado'
-                });
-            }
-            return res.status(200).json({
-                message: 'Password Cambiado con exito.'
-            })
-        } catch (err) {
-            console.log(err);
-            if (err instanceof Error) {
-                return res.status(404).json({
+            if(err instanceof Error) {
+                return res.status(400).json({
                     message: err.message
                 });
             }

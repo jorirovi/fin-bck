@@ -1,104 +1,87 @@
-import type { Validaciones } from "../interfaces/errores.type.js";
-import type { PasswordCambiar, UsuarioActualizar, UsuarioActulizarInput, UsuarioInput, UsuarioRow } from "../interfaces/usuarios.type.js";
-import bcrypt from 'bcrypt'
-import { ValidaCampos } from "../utils/validaciones.utils.js";
+import type { Usuario, UsuarioInput, UsuarioPublico, UsuarioRol } from "../interfaces/usuarios.type.js";
+import type { PerfilesModel } from "../models/perfiles.model.js";
 import { UsuarioModel } from "../models/usuarios.model.js";
-import { PerfilesModel } from "../models/perfiles.model.js";
+import { ValidaCampos } from "../utils/validaciones.utils.js";
+import { BaseService } from "./base.service.js";
+import bcrypt from 'bcrypt'
 
-export class UsuarioService {
-    static async addUsuario(input: UsuarioInput): Promise<boolean> {
-        const passVal: Validaciones = ValidaCampos.passVal(input.password);
-        const nomVal: Validaciones = ValidaCampos.nomPerfilVal(input.nombre);
-        const emailVal: Validaciones = ValidaCampos.emailVal(input.email);
-        if(!passVal.estado) {
-            throw new Error(passVal.error)
-        };
-        if(!nomVal.estado) {
-            throw new Error(nomVal.error)
-        };
-        if(!emailVal.estado){
-            throw new Error(emailVal.error)
-        };
-        const usuarioExiste = await UsuarioModel.getUsuarioByEmail(input.email);
-        if (usuarioExiste !== null) {
-            throw new Error('Usuario ya existe en la bd')
+export class UsuariosService extends BaseService<Usuario, UsuarioInput, UsuarioModel> {
+    constructor(
+        model: UsuarioModel, 
+        private readonly perfilModel: PerfilesModel
+    ){
+        super(model)
+    }
+
+    override async create(input: UsuarioInput): Promise<boolean> {
+        const validaPass = ValidaCampos.passVal(input.password);
+        const validaNombre = ValidaCampos.nomVal(input.nombre);
+        const validaEmail = ValidaCampos.emailVal(input.email);
+        if (!validaEmail.estado) {
+            throw new Error(validaEmail.error);
         }
-        const rolExiste = await PerfilesModel.getPerfilById(input.perfil);
-        if (rolExiste === null){
-            throw new Error('El Rol seleccionado no existe')
+        if (!validaPass.estado) {
+            throw new Error(validaPass.error);
+        }
+        if (!validaNombre.estado) {
+            throw new Error(validaNombre.error);
+        }
+        const perfilExciste = await this.perfilModel.getById(input.perfil);
+        if (perfilExciste === null) {
+            throw new Error ("El Perfil indicado no existe.")
+        }
+        const usuarioExiste = await this.getByEmail(input.email);
+        if (usuarioExiste !== null) {
+            throw new Error ('El email ya existe en la BD.');
+        }
+        const passHash = await bcrypt.hash(input.password, 10);
+        const usuario: UsuarioInput = {
+            ...input,
+            password: passHash
+        };
+        return super.create(usuario);
+    }
+
+    override async update(id: string, input: UsuarioInput): Promise<boolean> {
+        const existeUsuario =  await this.model.getById(id);
+        if (existeUsuario === null) {
+            throw new Error('Usuario no existe en la BD.');
+        }
+        const validaPass = ValidaCampos.passVal(input.password);
+        const validaNombre = ValidaCampos.nomVal(input.nombre);
+        const validaEmail = ValidaCampos.emailVal(input.email);
+        if (!validaEmail.estado) {
+            throw new Error(validaEmail.error);
+        }
+        if (!validaPass.estado) {
+            throw new Error(validaPass.error);
+        }
+        if (!validaNombre.estado) {
+            throw new Error(validaNombre.error);
         }
         const passHash = await bcrypt.hash(input.password, 10);
         const usuario: UsuarioInput = {
             ...input,
             password: passHash
         }
-        const crearUsuario = await UsuarioModel.addUsuario(usuario);
-        return crearUsuario;
+        return super.update(id, usuario);
     }
 
-    static async getUsuarios(): Promise<UsuarioRow[]> {
-        const usuarios = await UsuarioModel.getAllUsuarios();
-        return usuarios
-    } 
-
-    static async getUsuarioById(id: string): Promise<UsuarioRow | null> {
-        if(!id){
-            throw new Error ('No hay ID para buscar.');
+    async getByEmail(email: string): Promise<Usuario | null> {
+        const validaEmail = ValidaCampos.emailVal(email);
+        if (!validaEmail.estado) {
+            throw new Error(validaEmail.error);
         }
-        const usuario = await UsuarioModel.getUsuarioById(id);
-        return usuario ?? null
+        return this.model.getByEmail(email);
     }
 
-    static async updateUsuario(id: string, input: UsuarioActulizarInput): Promise<boolean>{
-        const nomVal: Validaciones = ValidaCampos.nomPerfilVal(input.nombre);
-        const emailVal: Validaciones = ValidaCampos.emailVal(input.email);
-        if(!nomVal.estado) {
-            throw new Error(nomVal.error)
-        };
-        if(!emailVal.estado){
-            throw new Error(emailVal.error)
-        };
-        const usuarioExiste = await UsuarioModel.getUsuarioByEmail(input.email);
-        if (usuarioExiste !== null) {
-            throw new Error('Usuario ya existe en la bd')
-        }
-        const rolExiste = await PerfilesModel.getPerfilById(input.perfil);
-        if (rolExiste === null){
-            throw new Error('El Rol seleccionado no existe')
-        }
-        const usuarioModificar: UsuarioActualizar = {
-            ...input,
-            fecha_modifica: new Date()
-        }
-        const usuarioModificado = await UsuarioModel.UpdateUsuario(id, usuarioModificar);
-        return usuarioModificado;
+    async getAllUsuarioPublico(): Promise<UsuarioRol[]> {
+        const usuarios = await this.model.getAllUsuarioPublico();
+        return usuarios;
     }
 
-    static async removeUser(id: string): Promise<boolean>{
-        const usuarioExiste = await UsuarioModel.getUsuarioById(id);
-        if(usuarioExiste === null) {
-            throw new Error ('Usuario no existe en la DB.');
-        }
-        const elminarUSuario = await UsuarioModel.RemoveUsuario(id);
-        return elminarUSuario;
+    async getUsuarioPublicoById(id: string): Promise<UsuarioRol | null> {
+        const usuario = await this.model.getUsuarioPublicoByID(id);
+        return usuario ?? null;
     }
-
-    static async updatePassword(input: PasswordCambiar): Promise<boolean>{
-        const emailVal: Validaciones = ValidaCampos.emailVal(input.email);
-        const passVal: Validaciones = ValidaCampos.passVal(input.nuevoPassword);
-        if (!emailVal.estado) {
-            throw new Error(emailVal.error);
-        }
-        if (!passVal.estado){
-            throw new Error(passVal.error);
-        }
-        const usuarioExiste = await UsuarioModel.getUsuarioByEmail(input.email);
-        if (usuarioExiste === null ){
-            throw new Error('Usuario no existe en la BD.');
-        }
-        const email = usuarioExiste.email;
-        const passHash = await bcrypt.hash(input.nuevoPassword, 10);
-        const passUpdate = await UsuarioModel.updatePassword(email, passHash);
-        return passUpdate;
-    } 
 }

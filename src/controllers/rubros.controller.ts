@@ -1,6 +1,7 @@
 import type { RubrosId, RubrosInput } from "../interfaces/rubros.type.js";
 import type { RubrosService } from "../services/rubros.service.js";
 import type { Request, Response } from "express";
+
 export class RubrosController {
     constructor(
         private readonly rubrosService: RubrosService
