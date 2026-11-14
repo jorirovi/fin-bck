@@ -9,18 +9,18 @@ export class PerfilesController {
     obtenerPerfiles = async (
         req: Request,
         res: Response
-    ): Promise<void> => {
+    ): Promise<Response> => {
         try {
             const perfiles = await this.perfilesService.getAll();
-            res.status(200).json(perfiles);
+            return res.status(200).json(perfiles);
         } catch (err) {
             console.log(err);
             if(err instanceof Error) {
-                res.status(404).json({
+                return res.status(404).json({
                     message: err.message
                 });
             }
-            res.status(500).json({
+            return res.status(500).json({
                 message: 'Error en el Servidor'
             });
         }
